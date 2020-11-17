@@ -73,11 +73,18 @@ footer a;hover{
 	background-color: transparent;
 }
 
-p.caption{
+.caption{
 	color: #999999;
 	font-style: italic;
 	margin-top: 0;
 }
+
+.caption{
+	color: #999999;
+	font-style: italic;
+	margin-top: 0;
+}
+
 
 
 
