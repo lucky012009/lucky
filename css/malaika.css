@@ -16,9 +16,6 @@ h1, h2 {
 	font-family: 'Roboto Slab', serif;
 }
 
-/* header styles */
-/* write your comment here */
-
 header h1{
 	color: white;
 	font-size: 35px;
@@ -73,18 +70,8 @@ footer a;hover{
 	background-color: transparent;
 }
 
-.caption{
+p.caption{
 	color: #999999;
 	font-style: italic;
 	margin-top: 0;
 }
-
-.caption{
-	color: #999999;
-	font-style: italic;
-	margin-top: 0;
-}
-
-
-
-
