@@ -1,0 +1,4 @@
+function togglelayer(rating){var element=null;if(document.getElementById){element=document.getElementById("div"+rating);}else if(document.all){element=document.all["div"+rating];}else if(document.layers){element=document.layers["div"+rating];}
+if(element!=null){if(element.style.display=='block'){element.style.display='none';document["btn"+rating].src='/img/plus.gif';}else{element.style.display='block';document["btn"+rating].src='/img/minus.gif';}}}
+function toggleLayer(rating){togglelayer(rating)}
+function enablelogin(){location.href='#top';document.z.login_username.select();document.z.login_username.focus();}
