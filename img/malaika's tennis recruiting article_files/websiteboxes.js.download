@@ -1,0 +1,222 @@
+function formatJson(val){var retval='';var str=val;var pos=0;var strLen=str.length;var indentStr='&nbsp;&nbsp;&nbsp;&nbsp;';var newLine='<br />';var char='';for(var i=0;i<strLen;i++){char=str.substring(i,i+1);if(char=='}'||char==']'){retval=retval+newLine;pos=pos-1;for(var j=0;j<pos;j++){retval=retval+indentStr;}}
+retval=retval+char;if(char=='{'||char=='['||char==','){retval=retval+newLine;if(char=='{'||char=='['){pos=pos+1;}
+for(var k=0;k<pos;k++){retval=retval+indentStr;}}}
+return retval;}
+function ajaxError(jqXHR,textStatus,errorThrown){$("#ajax_image").hide();$(".trn_login_form").prop("disabled",false);}
+function submitLoginForm(event){event.preventDefault();var form=this;if(!($(form).validationEngine("validate"))){return;}
+$(form).prop("disabled",true);var password=$(form).find(".trn_login_password").prop("value").toLowerCase();password=CryptoJS.HmacSHA256(password,password).toString(CryptoJS.enc.Hex);$(form).find(".trn_pswd_hash").val(password);password=CryptoJS.HmacSHA256(password,sessionid).toString(CryptoJS.enc.Hex);$(form).find(".trn_login_hash").val(password);$(form).find(".trn_sess_id").val(sessionid);var data=$(form).find(".trn_login_field").serialize();$(".trn_login_post_data").html("<b>Post Data</b><br><br>"+data);$("#ajax_image").show();$.ajax({"url":"/ajax/login.asp?debugoutput=false","type":"POST","data":data,"cache":false,"dataType":"json","success":function(response,textStats,jqXHR){$(form).prop("disabled",false);sessionid=response.sessionid;if(response.error!=""){var location="bottomLeft";if($(form).attr("name")=="login_colorbox"){location=location+":0,-10";}
+if(response.error.indexOf("password")>0){$(form).find("[name=login_password]").focus().select().validationEngine("showPrompt","The password you typed is incorrect.","red",location,true);}else{$(form).find("[name=login_username]").focus().select().validationEngine("showPrompt","That user name is not registered.","red",location,true);}}else if((response.userid>0)&&(reloadOnLogin)){$("#ajax_image").hide();parent.location.reload(true);return;}
+if(response.userid!=userid){$.ajax({"url":"/ajax/loginheader.asp","cache":false,"dataType":"html","success":function(response){$("#login").html(response);prepareLoginHandlers();},"error":ajaxError});if(response.coachdir=="/xyz/"){$("#coach_bar").hide();}else{$("#coach_bar").show();}
+window.userid=response.userid;}
+$(".trn_login_response").html("<b>Server Response</b><br><br>"+formatJson(jqXHR.responseText));$("#ajax_image").hide();},"error":ajaxError});}
+function prepareLoginHandlers(){$(".trn_login_form").validationEngine('detach');$(".trn_login_form[name!=login_colorbox]").prop("disabled",false).submit(submitLoginForm).validationEngine('attach',{promptPosition:"bottomLeft",binded:false,scroll:false,autoHidePrompt:true,autoHideDelay:3000});$(".trn_login_form [name=login_username], .trn_login_form [name=login_password]").keypress(logEvent).change(logEvent);}
+function logEvent(event){$(event.target).validationEngine("hide");}
+function objectLength(obj){if(typeof obj==="undefined"){return 0;}else if(jQuery.isArray(obj)){return obj.length;}else if(jQuery.isEmptyObject(obj)){return 0;}else{return 1;}}
+function getValueDef(value,def){if(typeof value==="undefined"){return def;}else if(value==""){return def;}else{return value;}}
+function getBoolDef(value,def){var temp=getValueDef(value,def.toString());if(typeof temp==="string"){return(temp.toLowerCase()=="true");}else if(typeof temp==="undefined"){return false;}else{return temp;}}
+function boxHeader(div,box){div.html+='<div class="header">';if(getValueDef(box.extra,'')!=''){div.html+=' <div class="right">'+box.extra+'</div>';}else if(getValueDef(box.more,'')!=''){div.html+=' <div class="right"><a href="'+box.more+'" data-action="More">More</a></div>';}
+if(getValueDef(box.glyph,'')!=''){div.html+='<table border=0 cellpadding=0 cellspacing=0><tr><td valign=middle>'+box.glyph+'</td><td valign=middle>&nbsp; '+box.title.toUpperCase()+'</td></tr></table>';}else{div.html+=box.title.toUpperCase();}
+div.html+='</div>';}
+function youtubeCarousel(div,id,box,padding){if(box.parameters.carousel){var videos=box.videos;if(typeof videos!=="undefined"){div.html+='<center><div style="padding: '+padding+'"><div id="'+id+'" class="youtube-carousel">';for(var i=0;i<videos.length;i++){div.html+='<div class="youtube-item" title="'+videos[i].title+
+'"><a href="'+videos[i].url+
+'"><div class="youtube-thumbnail"><img src="'+videos[i].thumbnail+
+'" width=90 height=68 border=0></div><div class="youtube-play"></div></a></div>';}
+div.html+='</div></div></center>';}}}
+function spacer(div,pixels){div.html+='<div style="font-size: '+pixels+'px; line-height: '+pixels+'px;">&nbsp;</div>';}
+function articleFeature(div,box){if(box.parameters.feature){var articles=box.articles;if(typeof articles!=="undefined"){for(var i=0;i<articles.length;i++){if(articles[i].feature!=''){div.html+='<h1>'+articles[i].feature+'</h1>';if(articles[i].photo!=''){div.html+='<a href="'+articles[i].url+'">'+articles[i].photo+'</a>';}
+div.html+='<p>'+articles[i].abstract+' <a href="'+articles[i].url+'"><b>Story</b></a></p>&nbsp;';articles.splice(i,1);break;}}}}}
+function articleList(div,articles,count,clss,style,logo){if(objectLength(articles)>0){div.html+='<table class="A '+clss+'" style="'+style+' width="100%">';div.html+='<tr>';div.html+='<td valign=top style="text-align: right">'+articles[0].date+'</td>';if(typeof logo==="undefined"){div.html+='<td><a href="'+articles[0].url+'">'+articles[0].headline+'</a></td>';}else{div.html+='<td>'+logo+'<a href="'+articles[0].url+'">'+articles[0].headline+'</a></td>';}
+div.html+='</tr>';for(var i=1;i<Math.min(articles.length,count);i++){div.html+='<tr>';div.html+='<td valign=top style="text-align: right">'+articles[i].date+'</td>';div.html+='<td><a href="'+articles[i].url+'">'+articles[i].headline+'</a></td>';div.html+='</tr>';}
+div.html+='</table>';}}
+function bulletList(div,articles,count,clss,style){if(objectLength(articles)>0){div.html+='<ul class="A '+clss+'" style="'+style+'">';for(var i=0;i<Math.min(articles.length,count);i++){if(typeof articles[i].action==="undefined"){div.html+='<li><a href="'+articles[i].url+'">'+articles[i].headline+'</a>';}else{div.html+='<li><a href="'+articles[i].url+'" data-action="'+articles[i].action+'">'+articles[i].headline+'</a>';}}
+div.html+='</ul>';}}
+function documentWrite(div,S){div.html+=S;}
+function slideshowHtml(div,data){if(data.slides.length>0){var i=0;var tstr='';var slide={};var parameters={};var action=getValueDef(data.action,'');if(action!=''){action=' data-action="'+action+'"';}
+var choose=getValueDef(data.choose,0);if(choose>0){while(data.slides.length>choose){i=Math.floor(Math.random()*data.slides.length);data.slides.splice(i,1);}}
+if(data.slides.length<2){data.dots={};}
+documentWrite(div,'<style>');documentWrite(div,'#'+data.id+' img { max-width: '+data.width+'px; max-height: '+data.height+'px }');documentWrite(div,'#'+data.id+' .ss-img { height: '+data.height+'px }');documentWrite(div,'#'+data.id+'.slideshow { background-color: '+getValueDef(data.bgcolor,'#000000')+' }');if(objectLength(data.dots)>0){documentWrite(div,'#'+data.id+' .slick-dots { top: '+(data.height+4+getValueDef(data.dots.offset,0))+'px }');if(data.dots.width=='auto'){data.dots.width=Math.floor((data.width-(data.slides.length-1)*4)/data.slides.length);}
+if(data.dots.width>=8){documentWrite(div,'#'+data.id+' .slick-dots li,'+
+'#'+data.id+' .slick-dots li button,'+
+'#'+data.id+' .slick-dots li button:before { width: '+data.dots.width+'px }');}
+if(data.dots.char!=''){tstr='; content: \''+data.dots.char+'\'';}
+if(data.dots.inactive!=''){tstr='; background-color: '+data.dots.inactive+tstr;}
+documentWrite(div,'#'+data.id+' .slick-dots li button:before { color: '+data.dots.color+tstr+'}');if(data.dots.active!=''){documentWrite(div,'#'+data.id+' .slick-dots li.slick-active button:before { background-color: '+data.dots.active+'}');}
+if(data.dots.width>=8){parameters.dots=true;}}
+documentWrite(div,'</style>');parameters.arrows=data.arrows;if(objectLength(data.dots)>0){documentWrite(div,'<center><div style="width: '+data.width+'px; height: '+(data.height+11)+'px">');}else{documentWrite(div,'<center><div>');}
+documentWrite(div,'<div id="'+data.id+'" class="slideshow" style="width: '+data.width+'px; height:'+data.height+'px;" data-parameters=\''+JSON.stringify(parameters)+'\'>');tstr='data-lazy';while(data.slides.length>0){i=Math.floor(Math.random()*data.slides.length);slide=data.slides[i];if(typeof slide.caption==='undefined'){slide.caption='';}
+if(typeof slide.href2!='undefined'){documentWrite(div,'<div><div class="ss-img"><img '+tstr+'="'+slide.src+'"><div class="caption">'+slide.caption+'</div>');tstr=data.id+'_'+(i+1);documentWrite(div,'<img src="/ts.gif" width="'+data.width+'" height="'+data.height+'" style="z-index: 5; position: absolute; top: 0; left: 0" usemap="#'+tstr+'">'+
+'<map name="'+tstr+'" id="'+tstr+'">'+
+'<area shape="rect" coords="0,0,'+Math.floor(data.width/2)+','+data.height+'" href="'+slide.href+'"'+action+'>'+
+'<area shape="rect" coords="'+Math.floor(data.width/2+1)+',0,'+data.width+','+data.height+'" href="'+slide.href2+'"'+action+'>'+
+'</map>'+
+'</div></div>');}else{documentWrite(div,'<div><a href="'+slide.href+'"'+action+'><div class="ss-img"><img '+tstr+'="'+slide.src+'"><div class="caption">'+slide.caption+'</div></div></a></div>');}
+data.slides.splice(i,1);tstr='src';}
+documentWrite(div,'</div></div></center>');}}
+function initializeSlideshow(slideshow){var parameters=$(slideshow).data('parameters');if(typeof parameters==="undefined"){parameters={};}
+$(slideshow).slick({lazyLoad:'ondemand',slidesToShow:1,slidesToScroll:1,infinite:true,arrows:getValueDef(parameters.arrows,false),fade:true,speed:1000,dots:getValueDef(parameters.dots,false),autoplay:true,autoplaySpeed:4000,pauseOnHover:false,pauseOnDotsOver:true,});}
+function updateHtml(websitebox,div){if(userid!=10001){websitebox.html(div.html);console.log('renderingBox ('+websitebox.attr('id')+'): top='+websitebox.offset().top+'px, height='+websitebox.height());}}
+function renderBox(websitebox){var parameters,renderFunction;parameters=websitebox.data('parameters');if(typeof parameters==="undefined"){parameters={};}else{renderFunction=parameters.render;}
+if(typeof renderFunction==="undefined"){renderFunction=websitebox.attr('id')+'Box';}
+if((typeof renderFunction!=="undefined")&&(renderFunction!='Box')){if(typeof window[renderFunction]!=="undefined"){window[renderFunction](websitebox);}}}
+function renderIfAboveFold(websitebox){if(websitebox.offset().top<=windowHeight){renderBox(websitebox);}}
+function renderColumn(column){var websitebox,renderFunction,parameters;if(column.index<column.count){websitebox=$('#'+column.id+' div.websitebox:eq('+column.index+')');if(typeof websitebox==="undefined"){console.log('error locating box');}else{renderBox(websitebox);column.height+=websitebox.height();}
+column.index++;}}
+function nextBox(column){return $('#'+column.id+' div.websitebox:eq('+column.index+')');}
+function renderNextBox(){var choices=[];var websitebox,offset;for(var i=0;i<columns.length;i++){if(columns[i].index<columns[i].count){websitebox=nextBox(columns[i]);if(typeof websitebox!=="undefined"){offset=websitebox.offset();choices.push({"column":columns[i],"top":offset.top,"tiebreaker":i});}}}
+if(choices.length>0){if(choices.length>1){choices.sort(function(a,b){if(a.top!==b.top){return a.top-b.top}else{return a.tiebreaker-b.tiebreaker}});}
+renderColumn(choices[0].column);return true;}else{return false;}}
+function GenericBox(websitebox,boxInit,boxRender){var div,boxdata,parameters;var boxname=websitebox.attr('id');var box=boxes[boxname];if(typeof box==="undefined"){box={};}
+if(typeof boxInit!=="undefined"){boxInit(box);}
+parameters=websitebox.data('parameters');if(typeof parameters==="undefined"){parameters={};}
+if(!getBoolDef(parameters.built,false)){boxdata=getValueDef(parameters.data,boxname);if(boxdata!==boxname){box=boxes[boxdata];if(typeof box!=="undefined"){if(typeof boxInit!=="undefined"){boxInit(box);}}else{box=boxes[boxname];}}
+parameters.articles=getValueDef(parameters.articles,5);parameters.carousel=getBoolDef(parameters.carousel,true);parameters.feature=getBoolDef(parameters.feature,false);box.parameters=parameters;div={"html":""};boxRender(box,div,box.parameters.articles);updateHtml(websitebox,div);parameters.built=true;websitebox.data('parameters',parameters);}}
+function WarehouseSlideshow(websitebox){var data=boxes[websitebox.attr('id')];if(typeof data!=="undefined"){var slideshow=data.slideshow;if(objectLength(slideshow)>0){if(websitebox.find('#'+slideshow.id).length==0){var div={"html":""};if(getValueDef(data.title,'')!=''){boxHeader(div,data);spacer(div,4);}else{spacer(div,10);}
+slideshowHtml(div,slideshow);documentWrite(div,getValueDef(data.footer,''));updateHtml(websitebox,div);}}}}
+function HeadlinesInit(box){if(typeof box.title==="undefined"){box.title='Headlines';box.more='/articles/headlines.asp';}}
+function HeadlinesRender(box,div,count){if(objectLength(box.articles)>0){var publish=new Date(year_yyyy+'-'+month_mm+'-'+day_dd+'T00:00:00.000-05:00');var now=new Date();if(now<publish){now=publish;}
+for(var i=box.articles.length-1;i>=0;i--){publish=new Date(box.articles[i].publish);if(publish>now){box.articles.splice(i,1);}else{break;}}}
+articleFeature(div,box);boxHeader(div,box);articleList(div,box.articles,count,'','','');documentWrite(div,'<div>&nbsp;</div>');}
+function HeadlinesBox(websitebox){GenericBox(websitebox,HeadlinesInit,HeadlinesRender);}
+function ZooTennisInit(box){box.title='The Latest From ZooTennis';box.more='http://www.zootennis.com';box.blurb='<a href="/articles/colette.asp">Colette Lewis</a> has covered topflight junior events as a freelance journalist for over a decade. '+
+'Read her <a href="/articles/colette.asp">weekly column</a>, follow her on <a href="https:\/\/twitter.com/zootennis" target="_blank">Twitter</a>, and '+
+'find more of her daily commentary at <a href="http://www.zootennis.com" data-action="Blurb">ZooTennis</a>.';box.logo='<a data-action="Logo" href="http://www.zootennis.com"><img src="'+img+'/zootennis.gif" width=115 height=50 border=0 style="float: right" hspace=10 vspace=4></a>';}
+function ZooTennisRender(box,div,count){boxHeader(div,box);youtubeCarousel(div,'zoo-carousel',box,'4px 0px 4px 0px');articleList(div,box.articles,count,'blog-posts','',box.logo);documentWrite(div,'<div class="padding">');documentWrite(div,box.blurb);documentWrite(div,'<div>&nbsp;</div></div>');}
+function ZooTennisBox(websitebox){GenericBox(websitebox,ZooTennisInit,ZooTennisRender);}
+function WhereNowInit(box){box.title='Where Are They Now?';box.more='/articles/where_are_they_now.asp';if(sponsors.WhereNow=='haviland'){box.blurb='<a href="http://www.havilandtennisacademy.com" data-action="Logo"><img src="/img/sponsors/haviland/havilandLogo_100x50.gif" width=100 height=50 border=0 style="float: right; padding-top: 6px; padding-bottom: 2px;" hspace=8></a>'+
+'Haviland Tennis Academy is the proud sponsor of <i>Where Are They Now?</i> - a series that catches up with former junior and college tennis players.';}else{box.blurb='<img src="'+img+'/articles/WhereNow_150x109.jpg" width=150 height=109 border=0 style="float: right; padding-left: 0px; margin-top: -5px; padding-bottom: 10px; margin-right: -12px;">'+
+'Our <i>Where Are They Now?</i> series catches up with former junior and college tennis players. Find out how people are continuing with their tennis - and how they are applying their college degrees.';}}
+function WhereNowRender(box,div,count){boxHeader(div,box);documentWrite(div,'<div class="padding">');documentWrite(div,box.blurb);documentWrite(div,'</div><div class="padding">');articleList(div,box.articles,count,'','');documentWrite(div,'<div>&nbsp;</div></div>');}
+function WhereAreTheyNowBox(websitebox){GenericBox(websitebox,WhereNowInit,WhereNowRender);}
+function WarehouseNewsInit(box){box.title='The Latest From Tennis Warehouse';box.more='';box.glyph='<a href="http://www.tennis-warehouse.com/?from=tenrec" data-action="Logo"><img src="'+theme_path+'tw_logo.gif" width=22 height=13 border=0></a>';box.displayed=0;}
+function WarehouseNewsRender(box,div,count){boxHeader(div,box);youtubeCarousel(div,'tw-carousel',box,'4px 0px 4px 0px');articleList(div,box.articles,count,'external-articles','','');documentWrite(div,'<div>&nbsp;</div>');}
+function WarehouseNewsBox(websitebox){GenericBox(websitebox,WarehouseNewsInit,WarehouseNewsRender);}
+function VideoCornerInit(box){box.title='Video Corner';box.more='';box.blurb='<a href="http://www.high-techtennis.com" data-action="Logo"><img src="'+img+'/sponsors/hightechtennis/HighTechTennis_Logo_125x64.jpg" width=125 height=64 border=0 style="float: right; padding-bottom: 0px;" hspace=4></a>'+
+'Recruiting videos can be an important part of the recruiting process, and High-Tech Tennis is the proud sponsor of the Video Corner at TennisRecruiting.net. Check out best practices when making a video - and see what college coaches are looking for...';box.articles=[{"date":"12\/16","headline":"Three Things We Wish You Knew About Recruit Videos","url":"/article.asp?id=2371"},{"date":"6\/06","headline":"USTA Gives Position on Use of Periscope and Meerkat Live Streaming Apps","url":"/article.asp?id=2215"},{"date":"4\/02","headline":"About College Recruit Videos","url":"/article.asp?id=1897"},{"date":"8\/22","headline":"Videos in the Recruiting Process","url":"/article.asp?id=1718"}];}
+function VideoCornerRender(box,div,count){boxHeader(div,box);documentWrite(div,'<div class="padding">');documentWrite(div,box.blurb);documentWrite(div,'</div><div class="padding">');bulletList(div,box.articles,count,'','');documentWrite(div,'<div>&nbsp;</div></div>');}
+function VideoCornerBox(websitebox){GenericBox(websitebox,VideoCornerInit,VideoCornerRender);}
+function UniversalTennisInit(box){box.title='Universal Tennis';box.more='http://blog.universaltennis.com/';box.blurb='<a href="http://www.universaltennis.com" data-action="Logo"><img src="'+img+'/sponsors/utr/utr_logo_125x46.gif" width=125 height=46 border=0 style="float: right; padding-bottom: 0px;" hspace=4></a>'+
+'The <a href="http://www.universaltennis.com" border=0 data-action="Blurb">Universal Tennis Rating</a> system provides tennis players across all ages, genders, and nationalities with a common framework for evaluating their levels of play.';box.displayed=0;}
+function UniversalTennisRender(box,div,count){boxHeader(div,box);documentWrite(div,'<div class="padding">');documentWrite(div,box.blurb);documentWrite(div,'<div>&nbsp;</div>');articleList(div,box.articles,count,'','');documentWrite(div,'<div>&nbsp;</div></div>');}
+function UniversalTennisBox(websitebox){GenericBox(websitebox,UniversalTennisInit,UniversalTennisRender);}
+function TennisOnCampusInit(box){box.title='USTA Tennis On Campus';box.more='';box.glyph='<img src="'+theme_path+'usta.gif" width=41 height=18>';box.blurb='<div style="float: right; width: 110px;"><a href="http://www.tennisoncampus.com" border=0 data-action="Logo"><img src="'+img+'/sponsors/toc_110x105.gif" width=110 height=105 border=0></a></div>'+
+'The USTA&#39;s Tennis On Campus program is designed to provide college students with opportunities for team camaraderie, social networking, and rivaled competition through tennis without the rigors of a varsity program.';box.articles=[{"headline":"About Tennis on Campus","url":"/article.asp?id=694","action":"About"},{"headline":"List of Programs","url":"http://www.tennisoncampus.com/CollegeClubTennisTeams.htm","action":"Programs"},{"headline":"Sectional Championships","url":"http://www.tennisoncampus.com/Events/USTATennisOnCampusSectionChampionships.htm","action":"Sectionals"},{"headline":"National Championship","url":"http://www.tennisoncampus.com/Events/USTATennisOnCampusNationalChampionship/USTATennisOnCampusNationalChampionship.htm","action":"Nationals"}];}
+function TennisOnCampusRender(box,div,count){boxHeader(div,box);documentWrite(div,'<div class="padding">');documentWrite(div,box.blurb);bulletList(div,box.articles,count,'','');documentWrite(div,'<div>&nbsp;</div></div>');}
+function TennisOnCampusBox(websitebox){GenericBox(websitebox,TennisOnCampusInit,TennisOnCampusRender);}
+function TalkTennisInit(box){box.title='Talk Tennis';box.glyph='<a href="http://www.tennis-warehouse.com/?from=tenrec" data-action="Logo"><img src="'+theme_path+'tw_logo.gif" width=22 height=13 border=0></a>';box.more='http://www.tennis-warehouse.com/tennis_recruit.html?from=tenrec&URL=http%3A%2F%2Ftt.tennis-warehouse.com%2Findex.php';box.blurb='Talk Tennis provides lively forums for the discussion of junior and college tennis. Here are the latest topics from the message boards.';}
+function TalkTennisRender(box,div,count){boxHeader(div,box);documentWrite(div,'<div class="padding">');documentWrite(div,box.blurb);var forum=box.forums;if(typeof forum!=="undefined"){for(var i=0;i<forum.length;i++){documentWrite(div,'<div style="padding-top: 10px; padding-left: 10px;"><b><a href="'+forum[i].url+'" data-action="Forum Link">'+forum[i].name+'</a></b></div>');bulletList(div,forum[i].topics,count,'forum-topics','');}}
+documentWrite(div,'<div>&nbsp;</div></div>');}
+function TalkTennisBox(websitebox){GenericBox(websitebox,TalkTennisInit,TalkTennisRender);}
+function RoundTablesInit(box){box.title='Roundtable Discussions';box.more='/articles/roundtables.asp';if(sponsors.Roundtables='inspiration'){box.blurb='<a href="http://www.ialions.com/sports/tennis" data-action="Logo"><img src="'+img+'/sponsors/inspiration/inspiration_100x60.gif" width=100 height=60 border=0 style="float: right; padding-top: 6px; padding-bottom: 2px;" hspace=8></a>'+
+'Inspiration Academy is excited to sponsor Roundtable Articles - featuring comments from top coaches and recent graduates on various recruiting topics.';}else{box.blurb='<img src="'+img+'/clipart/roundtable_100x75.jpg" width=100 height=75 border=0 style="float: right; padding-bottom: 0px;" hspace=4>'+
+'Want to know what the experts think? Roundtable Articles features comments from top coaches and recent graduates on various college tennis and recruiting topics.';}}
+function RoundTablesRender(box,div,count){boxHeader(div,box);documentWrite(div,'<div class="padding">');documentWrite(div,box.blurb);documentWrite(div,'</div><div class="padding">');articleList(div,box.articles,count,'','');documentWrite(div,'<div>&nbsp;</div></div>');}
+function RoundTablesBox(websitebox){GenericBox(websitebox,RoundTablesInit,RoundTablesRender);}
+function ParentingAcesInit(box){box.title='The Latest From Parenting Aces';box.more='http://www.parentingaces.com';box.blurb='Since 2011, Lisa Stone has been writing about all things junior tennis from a parent\'s perspective '+
+'at <a href="http://www.parentingaces.com" data-action="Blurb">Parenting Aces</a>. Tune '+
+'in to her <a href="http://parentingaces.com/radio-show/" data-action="Blurb">radio call-in '+
+'show</a> each Tuesday at 11am ET.';box.logo='<div style="float: right; padding-left: 5px; padding-top: 0px; padding-bottom: 0px;"><a href="http://www.parentingaces.com" border=0 data-action="Logo"><img src="'+img+'/sponsors/parentingaces_70x40.gif" width=70 height=40 border=0></a></div>';}
+function ParentingAcesRender(box,div,count){boxHeader(div,box);youtubeCarousel(div,'pa-carousel',box,'4px 0px 4px 0px');articleList(div,box.articles,count,'blog-posts','',box.logo);documentWrite(div,'<div class="padding">');documentWrite(div,box.blurb);documentWrite(div,'<div>&nbsp;</div></div>');}
+function ParentingAcesBox(websitebox){GenericBox(websitebox,ParentingAcesInit,ParentingAcesRender);}
+function JuniorTournamentsInit(box){box.title='Junior Tournaments';box.more='/articles/junior_tournaments.asp';box.blurb='<table border=0 cellpadding=0 cellspacing=0><tr>'+
+'<td style="vertical-algign: middle">The Tennis Recruiting Network is proud to host preview and wrap-up articles of top junior tennis tournaments from around the country.</td>'+
+'<td><img src="'+img+'/clipart/juniortennis_80x80.gif" width=80 height=80 border=0 hspace=4></td>'+
+'</tr></table>';}
+function JuniorTournamentsRender(box,div,count){boxHeader(div,box);documentWrite(div,'<div class="padding">');documentWrite(div,box.blurb);documentWrite(div,'</div><div class="padding">');articleList(div,box.articles,count,'','');documentWrite(div,'<div>&nbsp;</div></div>');}
+function JuniorTournamentsBox(websitebox){GenericBox(websitebox,JuniorTournamentsInit,JuniorTournamentsRender);}
+function ITANewsInit(box){box.title='ITA News';box.more='http://www.itatennis.com';box.blurb='<div style="float: right; padding-left: 10px; padding-top: 10px; "><a href="http://www.itatennis.com" border=0 data-action="Logo"><img src="'+img+'/sponsors/ita_100x47.gif" width=100 height=47 border=0></a></div>'+
+'Follow college tennis with the ITA - the governing body that oversees all levels of men&#39;s and women&#39;s varsity collegiate tennis.';box.pin=[{"headline":"ITA College Tennis Rankings","url":"http://www.itatennis.com/ResultsAndRankings/Rankings.htm","action":"Rankings"},{"headline":"National Tournament and Event Calendar","url":"National Tournament and Event Calendar","action":"Calendar"}];}
+function ITANewsRender(box,div,count){boxHeader(div,box);documentWrite(div,'<div class="padding">');documentWrite(div,box.blurb);bulletList(div,box.pin,5,'','');documentWrite(div,'<div>&nbsp;</div>');articleList(div,box.articles,count,'','');documentWrite(div,'<div>&nbsp;</div></div></div>');}
+function ITANewsBox(websitebox){GenericBox(websitebox,ITANewsInit,ITANewsRender);}
+function D3TennisInit(box){box.title='Division III Tennis';box.more='http://www.division3tennis.com';box.blurb='<table border=0 cellpadding=0 cellspacing=0><tr><td>For coverage of NCAA Division III men\'s and women\'s tennis, check out <a href="http://www.division3tennis.com" border=0 data-action="Blurb">Division3Tennis.com</a> - your one-stop shop for all things D-III.'+
+'<br>&nbsp;</td><td style="padding-left: 10px;"><a href="http://www.division3tennis.com" border=0 data-action="Logo"><img src="'+img+'/sponsors/d3/d3_logo_60x60.gif" width=60 height=60 border=0></a></td></tr></table>';box.displayed+=1;}
+function D3TennisRender(box,div,count){boxHeader(div,box);documentWrite(div,'<div class="padding">');documentWrite(div,box.blurb);articleList(div,box.articles,count,'','');documentWrite(div,'<div>&nbsp;</div></div>');}
+function D3TennisBox(websitebox){GenericBox(websitebox,D3TennisInit,D3TennisRender);}
+function CollegeFeaturesInit(box){box.title='College Features';box.more='/articles/college.asp';box.blurb='<table border=0 cellpadding=0 cellspacing=0><tr>'+
+'<td style="vertical-algign: middle">The Tennis Recruiting Network is proud to present exclusive college content covering men&#39;s and women&#39;s college tennis programs from around the country.</td>'+
+'<td style="padding-left: 10px;"><img src="'+img+'/articles/CollegeFeatures_100x102.jpg" width=100 height=102 border=0></td>'+
+'</tr></table>';}
+function CollegeFeaturesRender(box,div,count){boxHeader(div,box);documentWrite(div,'<div class="padding">');documentWrite(div,box.blurb);documentWrite(div,'</div><div class="padding">');articleList(div,box.articles,count,'','');documentWrite(div,'<div>&nbsp;</div></div>');}
+function CollegeFeaturesBox(websitebox){GenericBox(websitebox,CollegeFeaturesInit,CollegeFeaturesRender);}
+function CollegeTeamsInit(box){box.title='College Teams';box.extra='<a href="/teams/directory.asp?division=1">Men</a>&nbsp;&#124;&nbsp;<a href="/teams/directory.asp?division=4">Women</a>';box.more='';}
+function CollegeTeamsRender(box,div,count){var i,j,team,ranked;var mascot=mascots[Math.floor(Math.random()*mascots.length)];boxHeader(div,box);documentWrite(div,'<img src="'+mascot.src+'" width='+mascot.w+' height='+mascot.h+' border=0 style="float: right; padding-top: 10px;">');bulletList(div,box.articles,100,'','');documentWrite(div,'<div class="padding">');documentWrite(div,'<table border=0 cellpadding=0 cellspacing=0 width="100%" class=A>');if(typeof topmen!=="undefined"){documentWrite(div,'<tr><td colspan=3><div style="padding: 0px 0px 2px 0px;"><b>'+topmen.listname+'</b></div></td></tr>');documentWrite(div,'<tr><th>School</th><th align=center>Commits</th><th>Conference</th></tr><tbody class="oddeven">');ranked=topmen.rankings.length;for(i=0;i<Math.min(ranked,count);i++){j=Math.floor(Math.random()*topmen.rankings.length);team=topmen.rankings[j];documentWrite(div,'<tr><td><a href="/team.asp?id='+team.tid+'">'+team.tname+'</a></td><td class=center>'+team.commits+
+'</td><td><a href="/conference.asp?id='+team.cid+'">'+team.cname+'</a></td></tr>');topmen.rankings.splice(j,1);}
+documentWrite(div,'</tbody>');}
+if(typeof topwomen!=="undefined"){documentWrite(div,'<tr><td colspan=3><div style="padding: 8px 0px 2px 0px;"><b>'+topwomen.listname+'</b></div></td></tr>');documentWrite(div,'<tr><th>School</th><th align=center>Commits</th><th>Conference</th></tr><tbody class="oddeven">');ranked=topwomen.rankings.length;for(i=0;i<Math.min(ranked,count);i++){j=Math.floor(Math.random()*topwomen.rankings.length);team=topwomen.rankings[j];documentWrite(div,'<tr><td><a href="/team.asp?id='+team.tid+'">'+team.tname+'</a></td><td class=center>'+team.commits+
+'</td><td><a href="/conference.asp?id='+team.cid+'">'+team.cname+'</a></td></tr>');topwomen.rankings.splice(j,1);}
+documentWrite(div,'</tbody>');}
+documentWrite(div,'</table>'+
+'</div>&nbsp;<div class="padding">'+
+'<center>'+
+'<form method="post" action="/team.asp'+qQryStrParams+'" name="f">'+
+'<table border=0 cellpadding=0 cellspacing=0>'+
+'<tr>'+
+'<td>Find a Team: &nbsp;</td>'+
+'<td><input type=text name=f_playername value="" style="width: 150px;"></td>'+
+'<td>&nbsp;</td>'+
+'<td><input type=submit name=f_submit value="GO"><input type=hidden name=f_submitting value=1></td>'+
+'</tr>'+
+'</table>'+
+'</form>'+
+'</center>'+
+'&nbsp;'+
+'</div>');}
+function CollegeTeamsBox(websitebox){GenericBox(websitebox,CollegeTeamsInit,CollegeTeamsRender);}
+function CollegeTennisTodayInit(box){box.title='College Tennis Today';box.more='http://www.collegetennistoday.com';box.blurb='<table border=0 cellpadding=0 cellspacing=0><tr>'+
+'<td>For all things college tennis, check out <a href="http://www.collegetennistoday.com" border=0 data-action="Blurb">College Tennis Today</a> - with coverage, insight, and analysis of the game.<div>&nbsp;</div></td>'+
+'<td style="padding-left: 5px;"><a href="http://www.collegetennistoday.com" border=0 data-action="Logo"><img src="'+img+'/sponsors/collegetennistoday_90x60.jpg" width=90 height=60 border=0></a></td>'+
+'</tr></table>';}
+function CollegeTennisTodayRender(box,div,count){boxHeader(div,box);youtubeCarousel(div,'ctt-carousel',box,'4px 0px 0px 0px');documentWrite(div,'<div class="padding">');documentWrite(div,box.blurb);articleList(div,box.articles,count,'blog-posts','');documentWrite(div,'<div>&nbsp;</div></div>');}
+function CollegeTennisTodayBox(websitebox){GenericBox(websitebox,CollegeTennisTodayInit,CollegeTennisTodayRender);}
+function AcesSeriesInit(box){box.title='Aces Series';box.more='/articles/aces.asp';box.blurb='<a href="http://www.sctennisacademy.com" target="_blank" data-action="Logo"><img src="'+img+'/sponsors/scta/SCTA_Aces_85x72.gif" width=85 height=72 border=0 style="float: right; padding-top: 0px; padding-bottom: 2px;" hspace=8></a>'+
+'Each month, Colette Lewis notes top performances in junior and college tennis with her Aces column - brought to you by Southern California Tennis Academy.';}
+function AcesSeriesRender(box,div,count){boxHeader(div,box);documentWrite(div,'<div class="padding">');documentWrite(div,box.blurb);documentWrite(div,'</div><div class="padding">');articleList(div,box.articles,count,'','');documentWrite(div,'<div>&nbsp;</div></div>');}
+function AcesSeriesBox(websitebox){GenericBox(websitebox,AcesSeriesInit,AcesSeriesRender);}
+function TwitterInit(box){box.title='Follow Us on Twitter';box.extra='<a href="https:\/\/twitter.com/TennisRecNet">@TennisRecNet</a>';box.more='';}
+function TwitterRender(box,div,count){var height=getValueDef(box.parameters.height,1000);boxHeader(div,box);documentWrite(div,'<a class="twitter-timeline" href="https:\/\/twitter.com/TennisRecNet" data-widget-id="705628056673595393" width="310" height="'+height+'" data-chrome="noheader nofooter noborders noscrollbar"><img src="ts.gif" width="1" height="'+height+'"></a>'+
+'<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],'+
+"p=/^http:/.test(d.location)?'http':'https';"+
+'if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+":\/\/platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>');documentWrite(div,'<div>&nbsp;</div>');}
+function TwitterBox(websitebox){GenericBox(websitebox,TwitterInit,TwitterRender);}
+function ForecastsInit(box){box.title='Inside the Rankings';box.more='';box.blurb='<img src="'+img+'/clipart/ranking_80x80.jpg" width=80 height=80 border=0 style="float: right; padding-bottom: 0px;" hspace=4>'+
+'The lifeblood of Tennis Recruiting is its rankings - and our team has been ranking tennis players for more than two decades. Learn about tennis rankings in general - as well as our best-of-breed ranking system.';box.articles=[{"headline":"Introduction to Junior Tennis Rankings","url":"/article.asp?id=2244"},{"headline":"An Overview of Ratings and Rankings","url":"/article.asp?id=2295"},{"headline":"Analysis of Junior Ratings and Rankings","url":"/article.asp?id=2270"}];box.footer='Click here for the complete list of all of our <a href="/article.asp?id=2270#table">Tournament&nbsp;Forecasts</a>.';}
+function ForecastsRender(box,div,count){boxHeader(div,box);documentWrite(div,'<div class="padding">');documentWrite(div,box.blurb);bulletList(div,box.articles,10,'','');documentWrite(div,'<div style="padding-top: 10px; padding-bottom: 4px;"><b>Recent Tournament Forecasts</b></div>');documentWrite(div,'<table border=0 cellpadding=0 cellspacing=0 width="100%" class=A>'+
+'<tr>'+
+'<th valign="bottom">Date&nbsp;&nbsp;</th>'+
+'<th valign="bottom">Tournament</th>'+
+'<th valign="bottom">Predicted</th>'+
+'</tr>'+
+'<tbody class="oddeven">');var tournaments=box.tournaments;for(var i=0;i<Math.min(tournaments.length,count);i++){documentWrite(div,'<tr>'+
+'<td valign=top>'+tournaments[i].date+'</td>'+
+'<td valign=top><a href="'+tournaments[i].url+'">'+tournaments[i].name+'</a></td>');if(tournaments[i].percent!=''){documentWrite(div,'<td valign=top style="text-align: center;"><a href="'+tournaments[i].analysis+'" target="_blank">'+tournaments[i].percent+'</a></td>');}else{documentWrite(div,'<td valign=top style="text-align: center;">&ndash;</td>');}
+documentWrite(div,'</tr>');}
+documentWrite(div,'</tbody>'+
+'</table>');documentWrite(div,'<div>&nbsp;</div>');documentWrite(div,box.footer);documentWrite(div,'<div>&nbsp;</div></div>');}
+function ForecastsBox(websitebox){GenericBox(websitebox,ForecastsInit,ForecastsRender);}
+function SocialNetworksRender(box,div,count){documentWrite(div,'<div align="center">'+
+'<hr style="color: #bebebe; background-color: #bebebe; border: 0px; height: 1px; width: 300px;">'+
+'<table border=0 cellpadding=6 cellspacing=0 width=288>'+
+'<tr>'+
+'<td><a href="http://www.tennisrecruiting.net/rss/articles/headlines.asp" target="_blank"><img src="/img/links/rss.gif" width=59 height=25 hspace=4 border=0></a></td>'+
+'<td><a href="http://twitter.com/TennisRecNet" target="_blank"><img src="/img/links/twitter.gif" width=80 height=25 hspace=4 border=0></a></td>'+
+'<td><a href="http://www.facebook.com/TennisRecruiting" target="_blank"><img src="/img/links/facebook.gif" width=89 height=25 hspace=4 border=0></a></td>'+
+'</tr>'+
+'</table>'+
+'</div>');}
+function SocialNetworksBox(websitebox){GenericBox(websitebox,undefined,SocialNetworksRender);}
+function ProGearInit(box){box.glyph='<a href="http://www.tennis-warehouse.com/?from=tenrec" data-action="Logo"><img src="'+theme_path+'tw_logo.gif" width=22 height=13 border=0></a>';}
+function ProGearTableRow(div,pro){var product,links;product=pro.product;links=product.links;documentWrite(div,'<tr href="http://www.tennis-warehouse.com/player.html?ccode='+pro.ccode+'&from=tenrec">');documentWrite(div,'<td><a href="http://www.tennis-warehouse.com/player.html?ccode='+pro.ccode+'&from=tenrec" data-action="'+pro.tour+' Player"><img src="'+img+'/TW/Pros/'+pro.ccode+'.jpg" width=70 border=0></a></td>');documentWrite(div,'<td>&nbsp;</td>');documentWrite(div,'<td style="width: 100%;">');documentWrite(div,'<b><a href="http://www.tennis-warehouse.com/player.html?ccode='+pro.ccode+'&from=tenrec" data-action="'+pro.tour+' Player" style="text-decoration: none; color: #000">'+pro.name+'</a></b>');spacer(div,4);documentWrite(div,'<a href="'+product.url+'" data-action="Product">'+product.name+'</a><br>');if(typeof product.was==="undefined"){documentWrite(div,'Buy Now: '+product.price+'<br>');}else{documentWrite(div,'Was: '+product.was+' &nbsp;<strong style="color: #f00;">Now: '+product.price+'</strong><br>');}
+for(var i=0;i<links.length;i++){documentWrite(div,'<a href="'+links[i].url+'" data-action="'+links[i].name+'">'+links[i].name+'</a>');if(i<links.length-1){documentWrite(div,', ');}}
+spacer(div,4);documentWrite(div,'</td>');documentWrite(div,'</tr>');}
+function ProGearRender(box,div,count){var i,pros;boxHeader(div,box);documentWrite(div,'<table class="tw-pros" cellpadding=0 cellspacing=0 border=0>');pros=box.featured;while(pros.length>0){i=Math.floor(Math.random()*pros.length);ProGearTableRow(div,pros[i]);pros.splice(i,1);}
+pros=box.other;while(pros.length>0){i=Math.floor(Math.random()*pros.length);ProGearTableRow(div,pros[i]);pros.splice(i,1);}
+spacer(div,6);}
+function ProGearBox(websitebox){GenericBox(websitebox,ProGearInit,ProGearRender);}
+function FeaturedPhotosInit(box){if(typeof box.title==="undefined"){box.title='Featured Photos';box.more='/articles/photos.asp';if(sponsors.Photos=='advantage'){box.blurb='<table cellpadding=0 cellspacing=0 border=0 style="padding-top: 12px"><tr>'+
+'<td>Photo galleries are proudly presented by Southern California\'s own Advantage Tennis Academy.</td>'+
+'<td><a href="http://www.AdvantageTennisAcademy.com" data-action="Logo"><img src="/img/sponsors/advantage.gif" width=125 height=50 border=0></a></td>'+
+'</tr></table>';}else{box.blurb='';}}}
+function FeaturedPhotosRender(box,div,count){var slideshow=box.slideshow;if(objectLength(slideshow)>0){boxHeader(div,box);slideshowHtml(div,slideshow);documentWrite(div,getValueDef(box.blurb,''));}}
+function FeaturedPhotosBox(websitebox){GenericBox(websitebox,FeaturedPhotosInit,FeaturedPhotosRender);}
+$(document).ready(function(){console.log('websiteboxes.js - document.ready');prepareLoginHandlers();for(var i=columns.length-1;i>=0;i--){columns[i].count=$('#'+columns[i].id+' div.websitebox').length;if(columns[i].count==0){columns.splice(i,1);}}
+while(renderNextBox()){}
+$('.websitebox a[href^="http"]').attr('target','_blank');$('.websitebox area[href^="http"]').attr('target','_blank');$('.youtube-carousel').slick({slidesToShow:3,slidesToScroll:3,infinite:true,arrows:true});$('.slideshow').each(function(){initializeSlideshow(this);});$('.youtube-play').html('<img src="/img/play-button-overlay.png" width=26 height=21>');$('tbody.oddeven tr:nth-child(odd)').attr('class','odd');$('tbody.oddeven tr:nth-child(even)').attr('class','even');$('.websitebox a[href*="twitter.com"]').attr('data-action','Twitter');$('.websitebox a[href*="youtube.com"]').attr('data-action','Youtube');$('.external-articles a[target=""]').attr('target','_blank');$('.external-articles a').attr('data-action','Article Link');$('.blog-posts a[target=""]').attr('target','_blank');$('.blog-posts a').attr('data-action','Blog Post');$('.ZooTennis a[href^="http"]').attr('data-category','Zoo Tennis');$('.WarehouseNews a').attr('data-category','Tennis Warehouse');$('.TalkTennis a').attr('data-category','Tennis Warehouse');$('.TalkTennis .forum-topics a').attr('data-action','Topic Link');$('.ParentingAces a').attr('data-category','Parenting Aces');$('.CollegeTennisToday a').attr('data-category','College Tennis Today');});
